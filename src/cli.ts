@@ -59,6 +59,10 @@ program
     'Assume that the commands executed will perform the commits themselves - requires --title'
   )
   .option(
+    '-F, --no-fork',
+    'Do not try to create a fork if repo is owned by a different login'
+  )
+  .option(
     '-t, --title <t>',
     'Specify a title for the created PR (by default based on first line of the commit msg)'
   )

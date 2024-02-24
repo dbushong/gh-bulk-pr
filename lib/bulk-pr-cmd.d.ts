@@ -18,5 +18,6 @@ export interface BulkPROpts {
     title?: string;
     clone: boolean;
     dryRun: boolean;
+    fork: boolean;
 }
 export default function bulkPRCmd(pjson: PackageJson, repos: string[], opts: BulkPROpts): Promise<void>;

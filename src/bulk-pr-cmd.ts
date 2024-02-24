@@ -67,6 +67,7 @@ export interface BulkPROpts {
   title?: string;
   clone: boolean;
   dryRun: boolean;
+  fork: boolean;
 }
 
 function tokenize(str: string) {
@@ -112,9 +113,10 @@ async function createForkIfNeeded(
   repo: string,
   repoUrl: string,
   log: Logger,
-  clone: boolean
+  clone: boolean,
+  noFork: boolean
 ) {
-  if (owner === login) return repoUrl;
+  if (noFork || owner === login) return repoUrl;
 
   // try to create fork (if already exists, will also return 200)
   log.tmp(`ensuring fork of ${owner}/${repo}`, {
@@ -299,6 +301,7 @@ export default async function bulkPRCmd(
     json,
     buffer,
     dryRun,
+    fork: shouldFork,
   } = opts;
 
   if (!cmdLine) throw new Error('Missing required argument --cmd-line');
@@ -329,6 +332,7 @@ export default async function bulkPRCmd(
       .replace(/\n[\s\S]*/, '')
       .replace(/^(?:fix|chore|docs|test|feat|refactor|style):\s+/, '');
 
+  const noFork = !shouldFork;
   const branch = explicitBranch || tokenize(title);
   const prMsg = await buildPRMsg(pjson, prMsgFile, commitMsgText, cmdLine);
 
@@ -354,8 +358,6 @@ export default async function bulkPRCmd(
     data: { login },
   } = await gh.users.getAuthenticated();
 
-  const headBranch = `${login}:${branch}`;
-
   for (const ownerRepo of repos) {
     const log = makeLogger({
       json,
@@ -363,6 +365,8 @@ export default async function bulkPRCmd(
       buffer,
     });
     const [owner, repo] = ownerRepo.split('/');
+
+    const headBranch = noFork ? `${owner}:${branch}` : `${login}:${branch}`;
 
     const oldPR = await findOpenPR(gh, owner, repo, headBranch);
     if (oldPR) {
@@ -396,7 +400,8 @@ export default async function bulkPRCmd(
       repo,
       repoUrl,
       log,
-      clone
+      clone,
+      noFork
     );
 
     const baseBranch = await originBranch(git);
@@ -441,7 +446,12 @@ export default async function bulkPRCmd(
       branch,
       forkUrl,
     });
-    await git.push(['--force', '--set-upstream', 'fork', branch]);
+    await git.push([
+      '--force',
+      '--set-upstream',
+      noFork ? 'origin' : 'fork',
+      branch,
+    ]);
 
     const prOpts = {
       owner,

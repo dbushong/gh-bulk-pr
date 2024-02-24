@@ -82,6 +82,7 @@ describe('bulkPRCmd()', () => {
     commitMsg: 'default commit msg',
     dryRun: false,
     commit: true,
+    fork: true,
   };
 
   // inject our mocks dir into the front of PATH so that when "gh" is exec'ed
