@@ -36,6 +36,7 @@ import { Octokit } from '@octokit/rest';
 import { requestLog } from '@octokit/plugin-request-log';
 import chalk from 'chalk';
 import Debug from 'debug';
+import { default as nodeFetch } from 'node-fetch';
 import rimrafCb from 'rimraf';
 import { simpleGit, SimpleGit } from 'simple-git';
 
@@ -339,6 +340,7 @@ export default async function bulkPRCmd(
   const { token, host } = await getAuthStatus();
   const ghOpts: Exclude<ConstructorParameters<typeof Octokit>[0], undefined> = {
     auth: token,
+    request: { fetch: nodeFetch },
     log: {
       debug: () => {
         /* maybe include this? */
